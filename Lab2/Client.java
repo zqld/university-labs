@@ -32,7 +32,7 @@ public class Client {
             
 
             // Поток для отправки сообщений на сервер
-            Scanner scanner = new Scanner(System.in, "UTF-8"); // класс чтение строк с консоли
+            Scanner scanner = new Scanner(System.in, "UTF-8"); //  объект чтения строк с консоли
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 
             while (true) {                
@@ -46,4 +46,5 @@ public class Client {
             ex.printStackTrace();
         }
     }
+
 }
