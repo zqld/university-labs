@@ -22,7 +22,7 @@ public class EchoHandler implements Runnable {
     }
 
     // метод отправки сообщения клиенту
-    public void sendMessage(String message) { 
+    public synchronized void sendMessage(String message) { 
         try {
             out.write(message); // отправка сообщения
             out.newLine(); // переходим на новую строку
@@ -96,5 +96,6 @@ public class EchoHandler implements Runnable {
             server.closeHandler(this); // удаляем клиента из списка при выходе клиента
         }
     }
+
 
 }
