@@ -3,7 +3,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
-//Задание #3
+//Задание #4
 public class Test {
     public static void main(String[] args) throws IOException {
         Random rnd = new Random(0); // фиксированная случайная последовательность

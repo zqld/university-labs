@@ -8,14 +8,14 @@ import java.util.concurrent.atomic.AtomicReference;
 Мы заводим на чтение и на запись по отдельному новому потоку и 
 соединяем их блокирующей ограниченной очередью для передачи данных от читателя к писателю */
 
-
+//Задание #4
 public class CopyUtil3 {
     public static void copy(final InputStream src, final OutputStream... dst) throws IOException {
         final int writers_count = dst.length; // длина писателей
 
-        // reader-to-writers byte[]-channel  (очереди) 
-        final BlockingQueue<byte[]>[] buffers = new BlockingQueue[writers_count]; // массив очередей
-        for (int i = 0; i < writers_count; i++) {
+        // reader-to-writers byte[]-channel  (очереди в виде кольца) 
+        final BlockingQueue<byte[]>[] buffers = new ArrayBlockingQueue[writers_count+1]; // массив очередей (+1 чтобы передавать следующему и не было out of index)
+        for (int i = 0; i <= writers_count; i++) {
             buffers[i] = new ArrayBlockingQueue<>(64); // буфер в виде блокир. очереди длиной 64 эл-та (эл-т byte[] длиной 128)
         }
         
@@ -26,18 +26,21 @@ public class CopyUtil3 {
             public void uncaughtException(Thread t, Throwable e) {ex.set(e);} // ловим исплючение, которое может "выпрыгнуть" (кроме тех, которые пойманы нормальным путем)
         };
 
-        // reader from 'src' - поток для чтения (1)
+        // reader from 'src' - поток для чтения (1) в writer 1
         Thread reader = new Thread(group, () -> {
             try (InputStream src0 = src) {              // 'src0' for auto-closing (try with resouerces)
                 while (true) {
                     byte[] data = new byte[128];        // new data buffer
                     int count = src.read(data, 1, 127); // read up to 127 bytes (оставляет data[0] для метаданных)
-                    data[0] = (byte) count;             // 0-byte is length-field (помещаем в 0 байт длину)
-
-                    for (BlockingQueue<byte[]> buffer : buffers) { // перебор всех буферов
-                        buffer.put(data); // send to writer (помещается в очередь - если полная очередь, ждет появления места - поток чтения ждет)
+                    if (count == -1) {           // src empty
+                        data[0] = (byte) 0xFF;   // вместо длины помещаем -1 для обозначения конца потока
+                        buffers[0].put(data); // запись в первого писателя - send to writer (помещается в очередь - если полная очередь, ждет появления места - поток чтения ждет
+                        break;
                     }
-                    if (count == -1) {break;}           // src empty
+                    data[0] = (byte) count; // помещаем длину в первый байт
+                    buffers[0].put(data); //send to writer (помещается в очередь - если полная очередь, ждет появления места - поток чтения ждет
+                    byte[] returned = buffers[writers_count].take(); // ждем возвращение из последнего буфера (последний станет первым)
+                    if (returned != data) {throw new IllegalStateException("Buffer mismatch!");} // ловим ошибку несоответсивия буфера
                 }
             } catch (Exception e) {group.interrupt();}  // interrupt writer (прерываем всю группу, исключение не заносится в ex)
         });
@@ -51,8 +54,12 @@ public class CopyUtil3 {
                 try (OutputStream dst0 = dst[idx]) { // try with resouerces
                     while (true) {
                         byte[] data = buffers[idx].take(); // get new data from reader (ждет, пока очередь пуста, пока не появятся новые данные)
-                        if (data[0] == -1) break; // конец данных
-                        dst[idx].write(data, 1, data[0]); // записывает data[0] байт начиная с позиции 1
+                        if ((data[0] & 0xFF) == 0xFF) { // провекра конца потока через 0xFF (побитовое умножение)
+                            buffers[idx + 1].put(data); // передаем следующему буферу сигнал конца
+                            break; // конец данных
+                        }
+                        dst0.write(data, 1, data[0]); // записывает data[0] байт начиная с позиции 1
+                        buffers[idx + 1].put(data); // передаем следующему буферу сигнал конца
                     }
                 } catch (Exception e) {group.interrupt();}  // interrupt writer (прерываем всю группу, исключение не заносится в ex)
             });
