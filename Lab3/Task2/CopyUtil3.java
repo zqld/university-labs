@@ -12,9 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 
 public class CopyUtil3 {
-    private static final int poolSize = 16; // кол-во буферов (фикса)
 
     public static void copy(final InputStream src, final OutputStream dst) throws IOException {
+        final int poolSize = 16; // кол-во буферов (фикса)
         // reader-to-writer byte[]-channel 
         final BlockingQueue<byte[]> buffer = new ArrayBlockingQueue<>(16); // очередь заполненных буферов (в пути к писателю) (эл-т byte[] длиной 128)
         final BlockingQueue<byte[]> emptyBuffer = new ArrayBlockingQueue<>(poolSize); // фиксированные буферы, которые будут использоваться
@@ -70,4 +70,5 @@ public class CopyUtil3 {
         } catch (InterruptedException e) {throw new IOException(e);}
         if (ex.get() != null) {throw new IOException(ex.get());} // обработка ошибки из ex
     }
+
 }
