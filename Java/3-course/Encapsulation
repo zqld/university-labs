@@ -1,0 +1,38 @@
+package com.mycompany.m;
+
+// Класс, инкапсулирующий данные и методы
+public class MyClass {
+
+    // Приватное поле для инкапсуляции данных
+    private int dataValue;
+
+    // Конструктор класса для инициализации объектов
+    public MyClass(int initialValue) {
+        // Используем ключевое слово this для обращения к текущему объекту
+        this.dataValue = initialValue;
+    }
+
+    // Метод для получения значения dataValue
+    public int getDataValue() {
+        return dataValue;
+    }
+
+    // Метод для установки значения dataValue
+    public void setDataValue(int newValue) {
+        this.dataValue = newValue;
+    }
+
+    // Пример использования инкапсулированных данных и методов
+    public static void main(String[] args) {
+        // Создаем объект класса MyClass
+        MyClass obj = new MyClass(42);
+
+        // Получаем значение dataValue с использованием метода getDataValue
+        int val = obj.getDataValue();
+        System.out.println("Значение value: " + val);
+
+        // Устанавливаем новое значение dataValue с использованием метода setDataValue
+        obj.setDataValue(100);
+        System.out.println("Новое значение value: " + obj.getDataValue());
+    }
+}
