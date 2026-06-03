@@ -1,0 +1,9 @@
+module AudioPlayNew {
+    requires javafx.controls;
+    requires javafx.fxml;
+    requires javafx.media;
+    requires java.desktop; // Добавляем это утверждение, чтобы иметь доступ к javax.sound.sampled
+
+    opens audioplaynew to javafx.fxml;
+    exports audioplaynew;
+}
